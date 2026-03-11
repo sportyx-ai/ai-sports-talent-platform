@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'features/home/home_page.dart';
 import 'features/home/landing_page.dart';
+import 'core/theme.dart';
+
+
 
 void main() {
   runApp(const MyApp());
@@ -14,9 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Sportyx",
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: AppTheme.lightTheme,
       home: const LandingPage(),
       routes: {
         '/home': (context) => const HomePage(),

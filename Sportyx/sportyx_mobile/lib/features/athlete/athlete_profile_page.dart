@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import '../../core/colors.dart';
 
 class AthleteProfilePage extends StatefulWidget {
   final Map<String, dynamic> athlete;
@@ -14,6 +17,7 @@ class AthleteProfilePage extends StatefulWidget {
 
 class _AthleteProfilePageState extends State<AthleteProfilePage> {
   int _selectedBottomTab = 0;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +59,7 @@ class _AthleteProfilePageState extends State<AthleteProfilePage> {
                       'Welcome to Sportyx',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey,
+                        color: AppColors.grey,
                       ),
                     ),
                   ],
@@ -63,24 +67,25 @@ class _AthleteProfilePageState extends State<AthleteProfilePage> {
               ),
               const SizedBox(height: 24),
 
-              // Profile Summary Card
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              // Profile Summary Card - Centered
+              Center(
                 child: Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(24),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         CircleAvatar(
                           radius: 50,
-                          backgroundColor: Colors.blue.shade100,
+                          backgroundColor: AppColors.accent,
                           child: const Icon(
                             Icons.person,
                             size: 50,
-                            color: Colors.blue,
+                            color: AppColors.primaryDark,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -98,13 +103,13 @@ class _AthleteProfilePageState extends State<AthleteProfilePage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
+                            color: AppColors.accent,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             widget.athlete['sport'] ?? 'Not specified',
                             style: const TextStyle(
-                              color: Colors.blue,
+                              color: AppColors.primaryDark,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -116,7 +121,7 @@ class _AthleteProfilePageState extends State<AthleteProfilePage> {
               ),
               const SizedBox(height: 24),
 
-              // Details Section
+              // Details Section - 2D Grid
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
@@ -130,35 +135,42 @@ class _AthleteProfilePageState extends State<AthleteProfilePage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildDetailRow(
-                      'Age',
-                      '${widget.athlete['age'] ?? 'N/A'} years',
-                      Icons.cake,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildDetailRow(
-                      'Gender',
-                      widget.athlete['gender'] ?? 'Not specified',
-                      Icons.wc,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildDetailRow(
-                      'Height',
-                      '${widget.athlete['height'] ?? 'N/A'} cm',
-                      Icons.height,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildDetailRow(
-                      'Weight',
-                      '${widget.athlete['weight'] ?? 'N/A'} kg',
-                      Icons.scale,
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      childAspectRatio: 1.5,
+                      children: [
+                        _buildDetailCard(
+                          'Age',
+                          '${widget.athlete['age'] ?? 'N/A'} years',
+                          Icons.cake,
+                        ),
+                        _buildDetailCard(
+                          'Gender',
+                          widget.athlete['gender'] ?? 'Not specified',
+                          Icons.wc,
+                        ),
+                        _buildDetailCard(
+                          'Height',
+                          '${widget.athlete['height'] ?? 'N/A'} cm',
+                          Icons.height,
+                        ),
+                        _buildDetailCard(
+                          'Weight',
+                          '${widget.athlete['weight'] ?? 'N/A'} kg',
+                          Icons.scale,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
-              // Bio Section
+              // Bio Section - Rectangle Container
               if (widget.athlete['bio'] != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -174,9 +186,14 @@ class _AthleteProfilePageState extends State<AthleteProfilePage> {
                       ),
                       const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
+                          color: AppColors.accent.withOpacity(0.1),
+                          border: Border.all(
+                            color: AppColors.accent,
+                            width: 1.5,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -184,7 +201,7 @@ class _AthleteProfilePageState extends State<AthleteProfilePage> {
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.black87,
-                            height: 1.5,
+                            height: 1.6,
                           ),
                         ),
                       ),
@@ -232,9 +249,7 @@ class _AthleteProfilePageState extends State<AthleteProfilePage> {
               const SnackBar(content: Text('Posts - Coming Soon')),
             );
           } else if (index == 2) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Add Content - Coming Soon')),
-            );
+            _openVideoRecorder();
           } else if (index == 3) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Settings - Coming Soon')),
@@ -245,33 +260,101 @@ class _AthleteProfilePageState extends State<AthleteProfilePage> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.blue, size: 24),
-        const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
+  Future<void> _openVideoRecorder() async {
+    try {
+      showModalBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return SafeArea(
+            child: Wrap(
+              children: <Widget>[
+                ListTile(
+                  leading: const Icon(Icons.camera_front),
+                  title: const Text('Record with Front Camera'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _recordVideo();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please select Front Camera in the camera app')),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.videocam),
+                  title: const Text('Record with Back Camera'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _recordVideo();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please select Back Camera in the camera app')),
+                    );
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+          );
+        },
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error opening camera: $e')),
+      );
+    }
+  }
+
+  Future<void> _recordVideo() async {
+    try {
+      final XFile? video = await _imagePicker.pickVideo(
+        source: ImageSource.camera,
+      );
+      
+      if (video != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Video saved: ${video.name}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error recording video: $e')),
+      );
+    }
+  }
+
+  Widget _buildDetailCard(String label, String value, IconData icon) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(
+          color: AppColors.accent.withOpacity(0.3),
+          width: 1,
         ),
-      ],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: AppColors.accent, size: 28),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }

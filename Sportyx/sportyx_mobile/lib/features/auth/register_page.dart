@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../widgets/custom_button.dart';
+import '../../core/colors.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -16,6 +17,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _ageController = TextEditingController();
+  final _idNumberController = TextEditingController();
   
   String? _selectedGender;
   String? _selectedSport;
@@ -129,6 +131,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _ageController.dispose();
+    _idNumberController.dispose();
     super.dispose();
   }
 
@@ -204,6 +207,7 @@ class _RegisterPageState extends State<RegisterPage> {
               // Gender Dropdown
               DropdownButtonFormField<String>(
                 value: _selectedGender,
+                isExpanded: false,
                 decoration: const InputDecoration(
                   labelText: "Gender",
                   border: OutlineInputBorder(),
@@ -228,27 +232,21 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 16),
 
-              // Sport Event Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedSport,
+              // ID Number Field (Aadhar/National ID)
+              TextFormField(
+                controller: _idNumberController,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: "Sport Event",
+                  labelText: "ID Number (Aadhar/National ID)",
+                  hintText: "Enter your 12-digit ID number",
                   border: OutlineInputBorder(),
                 ),
-                items: sportOptions.map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedSport = newValue;
-                  });
-                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please select a sport';
+                    return 'Please enter your ID number';
+                  }
+                  if (value.length < 8) {
+                    return 'ID number must be at least 8 digits';
                   }
                   return null;
                 },
@@ -257,9 +255,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
               // ID Proof Upload
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
+                  border: Border.all(color: AppColors.lightGrey),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -274,11 +273,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 8),
                     if (_idProofFile != null)
-                      Padding(
+                      Container(
+                        width: double.infinity,
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Row(
                           children: [
-                            const Icon(Icons.image, color: Colors.blue),
+                            const Icon(Icons.image, color: AppColors.primary),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -289,64 +289,27 @@ class _RegisterPageState extends State<RegisterPage> {
                           ],
                         ),
                       ),
-                    ElevatedButton.icon(
-                      onPressed: _pickIdProof,
-                      icon: const Icon(Icons.upload_file),
-                      label: const Text('Upload ID Proof'),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _pickIdProof,
+                        icon: const Icon(Icons.upload_file),
+                        label: const Text('Upload ID Proof'),
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Performance Video Upload
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Performance Video',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (_performanceVideoFile != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.videocam, color: Colors.blue),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _performanceVideoFile!.path.split('/').last,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ElevatedButton.icon(
-                      onPressed: _pickPerformanceVideo,
-                      icon: const Icon(Icons.videocam),
-                      label: const Text('Upload Performance Video'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 30),
 
               // Register Button
-              CustomButton(
-                text: "Register",
-                onPressed: () {
+              Center(
+                child: CustomButton(
+                  text: "Register",
+                  width: 110,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  fontSize: 16,
+                  borderRadius: 16,                  outlined: true,                  onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     if (_idProofFile == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -354,15 +317,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       );
                       return;
                     }
-                    if (_performanceVideoFile == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please upload performance video'),
-                        ),
-                      );
-                      return;
-                    }
-
                     // TODO: Submit registration data to backend
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -372,6 +326,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     Navigator.pop(context);
                   }
                 },
+              ),
               ),
             ],
           ),

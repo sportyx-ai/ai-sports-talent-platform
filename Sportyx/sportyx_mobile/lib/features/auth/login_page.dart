@@ -66,6 +66,11 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 24),
               CustomButton(
                 text: "Login",
+                width: 110,
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                fontSize: 16,
+                borderRadius: 16,
+                outlined: true,
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     Navigator.pushReplacementNamed(context, '/home');

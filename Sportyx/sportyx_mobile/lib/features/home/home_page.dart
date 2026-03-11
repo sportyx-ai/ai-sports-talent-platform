@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../athlete/add_athlete_page.dart';
 import '../../widgets/athlete_card.dart';
+import '../../widgets/custom_button.dart';
 import '../athlete/athlete_profile_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -38,10 +39,14 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(title: const Text("Home")),
       body: athletes.isEmpty
           ? Center(
-              child: ElevatedButton.icon(
+              child: CustomButton(
+                text: "Add Athlete",
+                width: 150,
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                fontSize: 16,
+                borderRadius: 16,
+                outlined: true,
                 onPressed: _navigateToAddAthlete,
-                icon: const Icon(Icons.add),
-                label: const Text("Add Athlete"),
               ),
             )
           : ListView.builder(
@@ -51,10 +56,16 @@ class _HomePageState extends State<HomePage> {
                   // Add button at the end of the list
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
-                    child: ElevatedButton.icon(
-                      onPressed: _navigateToAddAthlete,
-                      icon: const Icon(Icons.add),
-                      label: const Text("Add Athlete"),
+                    child: Center(
+                      child: CustomButton(
+                        text: "Add Athlete",
+                        width: 150,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        fontSize: 16,
+                        borderRadius: 16,
+                        outlined: true,
+                        onPressed: _navigateToAddAthlete,
+                      ),
                     ),
                   );
                 }
