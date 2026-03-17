@@ -26,4 +26,5 @@ public class VideoUploadDTO {
     
     @Schema(example = "3fa85f64-5717-4562-b3fc-2c963f66afa6", description = "Optional event ID if video is for a specific event")
     private UUID eventId;
+    //check
 }
