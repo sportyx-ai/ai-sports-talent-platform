@@ -1,8 +1,10 @@
 package com.sportyx.backend.Services;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.sportyx.backend.Entities.AdminUser;
 import com.sportyx.backend.Entities.Athlete;
@@ -14,6 +16,10 @@ import com.sportyx.backend.Enums.RegistrationStatus;
 import com.sportyx.backend.Repositories.AthleteEventRepository;
 import com.sportyx.backend.Repositories.EventRepository;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +33,9 @@ public class EventService {
     private final AthleteService athleteService;
     private final AdminUserService adminUserService;
     private final NotificationService notificationService;
+
+    @Value("${app.upload.dir:uploads}")
+    private String uploadDir;
 
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
@@ -117,5 +126,35 @@ public class EventService {
 
     public List<AthleteEvent> getRegistrationsByEvent(UUID eventId) {
         return athleteEventRepository.findByEventId(eventId);
+    }
+
+    @Transactional
+    public Event uploadEventPoster(UUID eventId, MultipartFile file, String publicBaseUrl) {
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("Poster file is required");
+        }
+
+        Event event = getEventById(eventId);
+
+        String original = file.getOriginalFilename() == null ? "poster.jpg" : file.getOriginalFilename();
+        String ext = "";
+        int dot = original.lastIndexOf('.');
+        if (dot >= 0 && dot < original.length() - 1) {
+            ext = original.substring(dot);
+        }
+        String fileName = UUID.randomUUID() + ext;
+
+        try {
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Files.createDirectories(uploadPath);
+            Path target = uploadPath.resolve(fileName);
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to store poster file", e);
+        }
+
+        String posterUrl = publicBaseUrl + "/uploads/" + fileName;
+        event.setPosterUrl(posterUrl);
+        return eventRepository.save(event);
     }
 }

@@ -51,6 +51,9 @@ public class Event {
     @Column(name = "registration_deadline")
     private LocalDate registrationDeadline;
 
+    @Column(name = "poster_url", columnDefinition = "text")
+    private String posterUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 30)
     @Builder.Default

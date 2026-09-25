@@ -22,6 +22,18 @@ public class ManagerRegistrationDTO {
     @Schema(example = "Sports Academy")
     private String organization;
     
+    @Schema(example = "21")
+    private Integer age;
+
+    @Schema(example = "Male")
+    private String gender;
+
+    @Schema(example = "998374741399")
+    private String idNumber;
+
+    @Schema(example = "http://localhost:8080/uploads/id_proofs/proof.jpg")
+    private String idProofUrl;
+
     @Schema(example = "PT_TEACHER")
     private String role;
     

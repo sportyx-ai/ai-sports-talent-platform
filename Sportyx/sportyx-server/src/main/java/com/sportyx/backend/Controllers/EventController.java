@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.sportyx.backend.Entities.AthleteEvent;
 import com.sportyx.backend.Entities.Event;
@@ -84,5 +86,15 @@ public class EventController {
     @GetMapping("/events/{eventId}/registrations")
     public ResponseEntity<List<AthleteEvent>> getRegistrations(@PathVariable UUID eventId) {
         return ResponseEntity.ok(eventService.getRegistrationsByEvent(eventId));
+    }
+
+    // POST /api/events/{eventId}/poster  (upload event poster)
+    @PostMapping(value = "/events/{eventId}/poster", consumes = {"multipart/form-data"})
+    public ResponseEntity<Event> uploadEventPoster(
+        @PathVariable UUID eventId,
+        @RequestPart("posterImage") MultipartFile file
+    ) {
+        String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+        return ResponseEntity.ok(eventService.uploadEventPoster(eventId, file, baseUrl));
     }
 }
