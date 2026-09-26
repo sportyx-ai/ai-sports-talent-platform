@@ -48,6 +48,18 @@ public class Manager {
     @Column(length = 200)
     private String organization;
 
+    @Column
+    private Integer age;
+
+    @Column(length = 20)
+    private String gender;
+
+    @Column(name = "id_number", length = 50)
+    private String idNumber;
+
+    @Column(name = "id_proof_url", length = 500)
+    private String idProofUrl;
+
     @Column(length = 50)
     @Builder.Default
     private String role = "PT_TEACHER";

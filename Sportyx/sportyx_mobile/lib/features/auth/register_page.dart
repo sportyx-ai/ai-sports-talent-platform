@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../../widgets/custom_button.dart';
+import '../../widgets/server_settings_dialog.dart';
+import '../../core/colors.dart';
+import '../../core/api_config.dart';
+import '../../services/api_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -16,13 +19,62 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _ageController = TextEditingController();
+  final _idNumberController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _organizationController = TextEditingController();
   
   String? _selectedGender;
-  String? _selectedSport;
-  File? _idProofFile;
-  File? _performanceVideoFile;
+  XFile? _idProofFile;
   
   final ImagePicker _imagePicker = ImagePicker();
+  bool _loading = false;
+
+  Future<void> _submitRegistration() async {
+    if (!_formKey.currentState!.validate() || _loading) {
+      return;
+    }
+    if (_idProofFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please upload ID proof')),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+    try {
+      await ApiService.registerManager(
+        fullName: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        passwordHash: _passwordController.text.trim(),
+        phone: _phoneController.text.trim(),
+        organization: _organizationController.text.trim(),
+        age: int.tryParse(_ageController.text.trim()),
+        gender: _selectedGender,
+        idNumber: _idNumberController.text.trim(),
+        idProofFile: _idProofFile,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registration submitted successfully!'),
+        ),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
 
   final List<String> genderOptions = ['Male', 'Female', 'Other'];
   final List<String> sportOptions = [
@@ -42,66 +94,19 @@ class _RegisterPageState extends State<RegisterPage> {
         source: ImageSource.gallery,
       );
       if (pickedFile != null) {
+        if (!mounted) return;
         setState(() {
-          _idProofFile = File(pickedFile.path);
+          _idProofFile = pickedFile;
         });
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error picking ID proof: $e')),
       );
     }
   }
 
-  Future<void> _pickPerformanceVideo() async {
-    try {
-      showModalBottomSheet(
-        context: context,
-        builder: (BuildContext context) {
-          return SafeArea(
-            child: Wrap(
-              children: <Widget>[
-                ListTile(
-                  leading: const Icon(Icons.videocam),
-                  title: const Text('Record Video'),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    final XFile? video = await _imagePicker.pickVideo(
-                      source: ImageSource.camera,
-                    );
-                    if (video != null) {
-                      setState(() {
-                        _performanceVideoFile = File(video.path);
-                      });
-                    }
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.photo_library),
-                  title: const Text('Pick from Gallery'),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    final XFile? video = await _imagePicker.pickVideo(
-                      source: ImageSource.gallery,
-                    );
-                    if (video != null) {
-                      setState(() {
-                        _performanceVideoFile = File(video.path);
-                      });
-                    }
-                  },
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking video: $e')),
-      );
-    }
-  }
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
@@ -129,19 +134,69 @@ class _RegisterPageState extends State<RegisterPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _ageController.dispose();
+    _idNumberController.dispose();
+    _phoneController.dispose();
+    _organizationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Register")),
+      appBar: AppBar(
+        title: const Text("Register"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_ethernet),
+            tooltip: "Server Settings",
+            onPressed: () => showServerSettingsDialog(context, onUpdated: () => setState(() {})),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
+              InkWell(
+                onTap: () => showServerSettingsDialog(context, onUpdated: () => setState(() {})),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.deepPurple.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            const Icon(Icons.cloud_done, size: 16, color: Colors.deepPurple),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                "Server: ${ApiConfig.baseUrl}",
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.deepPurple),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "Change",
+                        style: TextStyle(fontSize: 12, color: Colors.deepPurple, decoration: TextDecoration.underline),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               // Name Field
               TextFormField(
                 controller: _nameController,
@@ -203,7 +258,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
               // Gender Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedGender,
+                initialValue: _selectedGender,
+                isExpanded: false,
                 decoration: const InputDecoration(
                   labelText: "Gender",
                   border: OutlineInputBorder(),
@@ -228,27 +284,52 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 16),
 
-              // Sport Event Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedSport,
+              // ID Number Field (Aadhar/National ID)
+              TextFormField(
+                controller: _idNumberController,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: "Sport Event",
+                  labelText: "ID Number (Aadhar/National ID)",
+                  hintText: "Enter your 12-digit ID number",
                   border: OutlineInputBorder(),
                 ),
-                items: sportOptions.map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedSport = newValue;
-                  });
-                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please select a sport';
+                    return 'Please enter your ID number';
+                  }
+                  if (value.length < 8) {
+                    return 'ID number must be at least 8 digits';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: "Phone Number",
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter phone number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _organizationController,
+                decoration: const InputDecoration(
+                  labelText: "Organization / School",
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter organization';
                   }
                   return null;
                 },
@@ -257,9 +338,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
               // ID Proof Upload
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
+                  border: Border.all(color: AppColors.lightGrey),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -274,104 +356,48 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 8),
                     if (_idProofFile != null)
-                      Padding(
+                      Container(
+                        width: double.infinity,
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Row(
                           children: [
-                            const Icon(Icons.image, color: Colors.blue),
+                            const Icon(Icons.image, color: AppColors.primary),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                _idProofFile!.path.split('/').last,
+                                _idProofFile!.name,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ElevatedButton.icon(
-                      onPressed: _pickIdProof,
-                      icon: const Icon(Icons.upload_file),
-                      label: const Text('Upload ID Proof'),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _pickIdProof,
+                        icon: const Icon(Icons.upload_file),
+                        label: const Text('Upload ID Proof'),
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Performance Video Upload
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Performance Video',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (_performanceVideoFile != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.videocam, color: Colors.blue),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _performanceVideoFile!.path.split('/').last,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ElevatedButton.icon(
-                      onPressed: _pickPerformanceVideo,
-                      icon: const Icon(Icons.videocam),
-                      label: const Text('Upload Performance Video'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 30),
 
               // Register Button
-              CustomButton(
-                text: "Register",
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    if (_idProofFile == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please upload ID proof')),
-                      );
-                      return;
-                    }
-                    if (_performanceVideoFile == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please upload performance video'),
-                        ),
-                      );
-                      return;
-                    }
-
-                    // TODO: Submit registration data to backend
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Registration submitted successfully!'),
-                      ),
-                    );
-                    Navigator.pop(context);
-                  }
+              Center(
+                child: CustomButton(
+                  text: _loading ? "Registering..." : "Register",
+                  width: 110,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  fontSize: 16,
+                  borderRadius: 16,
+                  outlined: true,
+                  onPressed: () {
+                  _submitRegistration();
                 },
+              ),
               ),
             ],
           ),

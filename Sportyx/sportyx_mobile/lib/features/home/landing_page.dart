@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../auth/login_page.dart';
+import '../../core/colors.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -17,19 +18,19 @@ class _LandingPageState extends State<LandingPage> {
       title: 'Welcome to Sportyx',
       description: 'Discover talented athletes and showcase your skills',
       icon: Icons.sports_basketball,
-      color: Colors.blue,
+      color: AppColors.primary,
     ),
     SlideData(
       title: 'Connect & Collaborate',
       description: 'Network with other athletes and scouts in your sport',
       icon: Icons.group,
-      color: Colors.purple,
+      color: AppColors.primaryLight,
     ),
     SlideData(
       title: 'Grow Your Career',
       description: 'Share your performance videos and get recognized',
       icon: Icons.trending_up,
-      color: Colors.orange,
+      color: AppColors.accent,
     ),
   ];
 
@@ -76,7 +77,7 @@ class _LandingPageState extends State<LandingPage> {
                   height: 10,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
-                    color: _currentPage == index ? Colors.blue : Colors.grey,
+                    color: _currentPage == index ? AppColors.primary : AppColors.lightGrey,
                   ),
                 ),
               ),
@@ -88,35 +89,52 @@ class _LandingPageState extends State<LandingPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 if (_currentPage > 0)
-                  OutlinedButton(
-                    onPressed: () {
-                      _pageController.previousPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                    child: const Text('Previous'),
-                  ),
-                if (_currentPage < slides.length - 1)
-                  ElevatedButton(
-                    onPressed: () {
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                    child: const Text('Next'),
-                  )
-                else
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (_) => const LoginPage(),
+                  SizedBox(
+                    width: 140,
+                    height: 50,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
                         ),
-                      );
-                    },
-                    child: const Text('Get Started'),
+                        side: const BorderSide(color: AppColors.primary),
+                      ),
+                      onPressed: () {
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 400),
+                          curve: Curves.easeInOutCubic,
+                        );
+                      },
+                      child: const Text('Previous'),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 140,
+                    height: 50,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      onPressed: () {
+                        if (_currentPage < slides.length - 1) {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeInOutCubic,
+                          );
+                        } else {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (_) => const LoginPage(),
+                            ),
+                          );
+                        }
+                      },
+                      child: Text(
+                        _currentPage < slides.length - 1 ? 'Next' : 'Get Started',
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -151,7 +169,7 @@ class _LandingPageState extends State<LandingPage> {
             slide.description,
             style: const TextStyle(
               fontSize: 16,
-              color: Colors.grey,
+              color: AppColors.grey,
             ),
             textAlign: TextAlign.center,
           ),

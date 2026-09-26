@@ -6,6 +6,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import java.time.LocalDateTime;
@@ -48,9 +49,11 @@ public class AdminUser {
     // Relationships
     @OneToMany(mappedBy = "assessedBy", cascade = CascadeType.ALL)
     @Builder.Default
+    @JsonIgnore
     private List<Assessment> assessments = new ArrayList<>();
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
     @Builder.Default
+    @JsonIgnore
     private List<Event> events = new ArrayList<>();
 }
