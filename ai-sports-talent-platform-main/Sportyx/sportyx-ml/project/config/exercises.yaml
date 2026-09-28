@@ -1,0 +1,55 @@
+scoring_weights:
+  technique: 0.40
+  range_of_motion: 0.20
+  consistency: 0.15
+  tempo: 0.10
+  balance: 0.10
+  stability: 0.05
+exercises:
+  squat:
+    primary_angle: knee_angle
+    extension_angle: 165
+    flexion_angle: 105
+    minimum_rom: 55
+    min_phase_seconds: 0.25
+    rules:
+      minimum_depth_angle: 105
+      maximum_trunk_inclination: 50
+      max_knee_symmetry_delta: 18
+  push_up:
+    primary_angle: elbow_angle
+    extension_angle: 160
+    flexion_angle: 95
+    minimum_rom: 55
+    min_phase_seconds: 0.25
+    rules:
+      minimum_depth_angle: 95
+      minimum_extension_angle: 160
+      maximum_body_line_deviation: 20
+  sit_up:
+    primary_angle: hip_angle
+    extension_angle: 155
+    flexion_angle: 75
+    minimum_rom: 65
+    min_phase_seconds: 0.30
+    rules:
+      minimum_flexion_angle: 75
+      max_angular_velocity: 360
+  vertical_jump:
+    primary_angle: knee_angle
+    extension_angle: 160
+    flexion_angle: 115
+    minimum_rom: 35
+    min_phase_seconds: 0.15
+    rules:
+      minimum_crouch_angle: 115
+      minimum_flight_frames: 2
+  standing_broad_jump:
+    primary_angle: knee_angle
+    extension_angle: 160
+    flexion_angle: 115
+    minimum_rom: 35
+    min_phase_seconds: 0.15
+    rules:
+      minimum_crouch_angle: 115
+      require_two_foot_takeoff: true

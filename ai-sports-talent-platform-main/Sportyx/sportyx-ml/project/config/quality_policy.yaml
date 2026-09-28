@@ -1,0 +1,10 @@
+minimum_pose_coverage: 0.60
+maximum_camera_motion: 8.0
+maximum_blur_fraction: 0.45
+maximum_dark_fraction: 0.40
+maximum_out_of_frame_fraction: 0.30
+maximum_duplicate_frame_fraction: 0.25
+reject_on:
+  - no_primary_person
+  - insufficient_pose_coverage
+  - severe_occlusion
